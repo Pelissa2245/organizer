@@ -17,6 +17,8 @@ organize install_organize.sh Installation Instructions.txt
 
 5-Then, run the installer by typing:
 
+chmod +x install_organize.sh
+
 ./install_organize.sh
 
 *Note* Wait a few moments — the installation is quick.
