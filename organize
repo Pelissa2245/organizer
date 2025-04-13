@@ -1,0 +1,51 @@
+#!/bin/bash
+
+# (Targeted directory)
+DIR=${1:-$(pwd)}
+
+# Verify if the asked directory exists
+if [ ! -d "$DIR" ]; then
+    exit 1
+fi
+
+# Lists files that are in the directory and organize them in ascending order
+ls -lhS "$DIR" | tail -n +2 | sort -k5 -h
+
+# Declares folders for creation
+declare -A FOLDERS
+FOLDERS[1048576,104857600]="1MB-100MB"
+FOLDERS[104857600,524288000]="100MB-500MB"
+FOLDERS[524288000,1073741824]="500MB-1GB"
+FOLDERS[1073741824,5368709120]="1GB-5GB"
+FOLDERS[5368709120,10737418240]="5GB-10GB"
+FOLDERS[10737418240,21474836480]="10GB-20GB"
+FOLDERS[21474836480,32212254720]="20GB-30GB"
+FOLDERS[32212254720,42949672960]="30GB-40GB"
+FOLDERS[42949672960,53687091200]="40GB-50GB"
+FOLDERS[53687091200,64424509440]="50GB-60GB"
+FOLDERS[64424509440,75161927680]="60GB-70GB"
+FOLDERS[75161927680,85899345920]="70GB-80GB"
+FOLDERS[85899345920,96636764160]="80GB-90GB"
+FOLDERS[96636764160,107374182400]="90GB-100GB"
+
+# Verify, create and move files to their designated folder (Only creates folder if there is a file with that size)
+for ITEM in "$DIR"/*; do
+    if [ -e "$ITEM" ]; then
+        SIZE=$(du -sb "$ITEM" | awk '{print $1}')
+        for RANGE in "${!FOLDERS[@]}"; do
+            IFS=',' read -r MIN MAX <<< "$RANGE"
+            if [ "$SIZE" -ge "$MIN" ] && [ "$SIZE" -lt "$MAX" ]; then
+                FOLDER="$DIR/${FOLDERS[$RANGE]}"
+                # Check if the folder already exists and skip if it does
+                if [ ! -d "$FOLDER" ]; then
+                    mkdir -p "$FOLDER"
+                fi
+                # Move the file only if it's not already in the correct folder
+                if [ "$(dirname "$ITEM")" != "$FOLDER" ]; then
+                    mv "$ITEM" "$FOLDER/"
+                fi
+                break
+            fi
+        done
+    fi
+done
